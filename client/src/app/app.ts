@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { lastValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -11,18 +12,18 @@ import { RouterOutlet } from '@angular/router';
 export class App {
   private http = inject(HttpClient);
   protected title = 'client';
+  protected members = signal<any>([]);
 
-  ngOnInit() {
-    this.http.get('https://localhost:5001/api/members').subscribe({
-      next: (response) => {
-        console.log(response);
-      },
-      error: (error) => {
-        console.error('Error fetching members:', error);
-      },
-      complete: () => {
-        console.log('Request completed');
-      },
-    });
+  async ngOnInit() {
+    this.members.set(await this.getMembers());
+  }
+
+  async getMembers() {
+    try {
+      return lastValueFrom(this.http.get('https://localhost:5001/api/members'));
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   }
 }
