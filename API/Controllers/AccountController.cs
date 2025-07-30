@@ -1,6 +1,3 @@
-
-
-using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using API.Data;
@@ -17,10 +14,8 @@ namespace API.Controllers
         [HttpPost("register")] // api/account/register
         public async Task<ActionResult<AppUser>> Register(RegisterDto registerDto)
         {
-            if (await UserExists(registerDto.Email))
-            {
-                return BadRequest("Email is already in use");
-            }
+            if (await EmailExists(registerDto.Email)) return BadRequest("Email is already in use");
+            
             var hmac = new HMACSHA512();
 
             var user = new AppUser
@@ -37,7 +32,7 @@ namespace API.Controllers
             return user;
         }
         
-        private async Task<bool> UserExists(string email)
+        private async Task<bool> EmailExists(string email)
         {
             return await context.Users.AnyAsync(x => x.Email.ToLower() == email.ToLower());
         }
