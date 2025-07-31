@@ -1,16 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
+import { Nav } from '../layout/nav/nav';
 
 @Component({
   selector: 'app-root',
-  imports: [],
+  imports: [Nav],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class App {
   private http = inject(HttpClient);
-  protected title = 'client';
+  protected title = 'Dating App';
   protected members = signal<any>([]);
 
   async ngOnInit() {
