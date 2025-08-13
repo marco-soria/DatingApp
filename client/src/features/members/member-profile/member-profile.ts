@@ -10,13 +10,14 @@ import { EditableMember, Member } from '../../../types/member';
 
 import { DatePipe } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
+import { TimeAgoPipe } from '../../../core/pipes/time-ago-pipe';
 import { AccountService } from '../../../core/services/account-service';
 import { MemberService } from '../../../core/services/member-service';
 import { ToastService } from '../../../core/services/toast-service';
 
 @Component({
   selector: 'app-member-profile',
-  imports: [DatePipe, FormsModule],
+  imports: [DatePipe, FormsModule, TimeAgoPipe],
   templateUrl: './member-profile.html',
   styleUrl: './member-profile.css',
 })
