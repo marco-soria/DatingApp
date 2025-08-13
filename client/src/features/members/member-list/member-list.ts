@@ -1,8 +1,7 @@
 import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { MemberService } from '../../../core/services/member-service';
-import { Member, MemberParams } from '../../../types/member';
-
 import { Paginator } from '../../../shared/paginator/paginator';
+import { Member, MemberParams } from '../../../types/member';
 import { PaginatedResult } from '../../../types/pagination';
 import { FilterModal } from '../filter-modal/filter-modal';
 import { MemberCard } from '../member-card/member-card';
