@@ -12,7 +12,9 @@ public class AdminController(UserManager<AppUser> userManager) : BaseAPIControll
     [HttpGet("users-with-roles")]
     public async Task<ActionResult> GetUsersWithRoles()
     {
-        var users = await userManager.Users.ToListAsync();
+        var users = await userManager.Users
+            .OrderBy(u => u.Email)
+            .ToListAsync();
         var userList = new List<object>();
 
         foreach (var user in users)
@@ -22,6 +24,7 @@ public class AdminController(UserManager<AppUser> userManager) : BaseAPIControll
             {
                 user.Id,
                 user.Email,
+                user.DisplayName,
                 Roles = roles.ToList()
             });
         }

@@ -8,6 +8,36 @@
       <button (click)="resetFilters()" class="btn btn-neutral">
         Reset Filters
       </button>
+
+      <!-- Botones de ordenamiento rápido -->
+      <div class="divider divider-horizontal"></div>
+      <div class="flex gap-2 items-center">
+        <span class="text-sm font-semibold text-base-content/70"
+          >Quick Sort:</span
+        >
+        <button
+          (click)="quickSort('lastActive')"
+          class="btn btn-sm"
+          [class.btn-accent]="memberParams.orderBy === 'lastActive'"
+        >
+          Recent
+        </button>
+        <button
+          (click)="quickSort('created')"
+          class="btn btn-sm"
+          [class.btn-accent]="memberParams.orderBy === 'created'"
+        >
+          Newest
+        </button>
+        <button
+          (click)="quickSort('alphabetical')"
+          class="btn btn-sm"
+          [class.btn-accent]="memberParams.orderBy === 'alphabetical'"
+        >
+          A-Z
+        </button>
+      </div>
+
       <div
         class="text-lg bg-base-100 py-2 px-4 border-1 rounded-lg text-primary capitalize"
       >

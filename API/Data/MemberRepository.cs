@@ -39,6 +39,7 @@ public class MemberRepository(AppDbContext context) : IMemberRepository
         query = memberParams.OrderBy switch
         {
             "created" => query.OrderByDescending(x => x.Created),
+            "alphabetical" => query.OrderBy(x => x.DisplayName),
             _ => query.OrderByDescending(x => x.LastActive)
         };
 

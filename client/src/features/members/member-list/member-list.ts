@@ -65,6 +65,15 @@ export class MemberList implements OnInit {
     this.loadMembers();
   }
 
+  quickSort(orderBy: string) {
+    if (this.memberParams.orderBy !== orderBy) {
+      this.memberParams.orderBy = orderBy;
+      this.memberParams.pageNumber = 1; // Reset to first page when sorting changes
+      this.updatedParams = { ...this.memberParams };
+      this.loadMembers();
+    }
+  }
+
   get displayMessage(): string {
     const defaultParams = new MemberParams();
 
@@ -85,11 +94,20 @@ export class MemberList implements OnInit {
       );
     }
 
-    filters.push(
-      this.updatedParams.orderBy === 'lastActive'
-        ? 'Recently active'
-        : 'Newest members'
-    );
+    const getOrderByText = (orderBy: string): string => {
+      switch (orderBy) {
+        case 'lastActive':
+          return 'Recently active';
+        case 'created':
+          return 'Newest members';
+        case 'alphabetical':
+          return 'Alphabetical (A-Z)';
+        default:
+          return 'Recently active';
+      }
+    };
+
+    filters.push(getOrderByText(this.updatedParams.orderBy));
 
     return filters.length > 0
       ? `Selected: ${filters.join('  | ')}`
