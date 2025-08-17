@@ -4,15 +4,16 @@ import {
   effect,
   ElementRef,
   inject,
+  OnDestroy,
   OnInit,
-  signal,
   ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { TimeAgoPipe } from '../../../core/pipes/time-ago-pipe';
 import { MemberService } from '../../../core/services/member-service';
 import { MessageService } from '../../../core/services/message-service';
-import { Message } from '../../../types/message';
+import { PresenceService } from '../../../core/services/presence-service';
 
 @Component({
   selector: 'app-member-messages',
@@ -20,16 +21,17 @@ import { Message } from '../../../types/message';
   templateUrl: './member-messages.html',
   styleUrl: './member-messages.css',
 })
-export class MemberMessages implements OnInit {
+export class MemberMessages implements OnInit, OnDestroy {
   @ViewChild('messageEndRef') messageEndRef!: ElementRef;
-  private messageService = inject(MessageService);
+  protected messageService = inject(MessageService);
   private memberService = inject(MemberService);
-  protected messages = signal<Message[]>([]);
+  protected presenceService = inject(PresenceService);
+  private route = inject(ActivatedRoute);
   protected messageContent = '';
 
   constructor() {
     effect(() => {
-      const currentMessages = this.messages();
+      const currentMessages = this.messageService.messageThread();
       if (currentMessages.length > 0) {
         this.scrollToBottom();
       }
@@ -37,22 +39,13 @@ export class MemberMessages implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadMessages();
-  }
-
-  loadMessages() {
-    const memberId = this.memberService.member()?.id;
-    if (memberId) {
-      this.messageService.getMessageThread(memberId).subscribe({
-        next: (messages) =>
-          this.messages.set(
-            messages.map((message) => ({
-              ...message,
-              currentUserSender: message.senderId !== memberId,
-            }))
-          ),
-      });
-    }
+    this.route.parent?.paramMap.subscribe({
+      next: (params) => {
+        const otherUserId = params.get('id');
+        if (!otherUserId) throw new Error('Cannot connect to hub');
+        this.messageService.createHubConnection(otherUserId);
+      },
+    });
   }
 
   sendMessage() {
@@ -60,14 +53,8 @@ export class MemberMessages implements OnInit {
     if (!recipientId) return;
     this.messageService
       .sendMessage(recipientId, this.messageContent)
-      .subscribe({
-        next: (message) => {
-          this.messages.update((messages) => {
-            message.currentUserSender = true;
-            return [...messages, message];
-          });
-          this.messageContent = '';
-        },
+      ?.then(() => {
+        this.messageContent = '';
       });
   }
 
@@ -77,5 +64,9 @@ export class MemberMessages implements OnInit {
         this.messageEndRef.nativeElement.scrollIntoView({ behavior: 'smooth' });
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.messageService.stopHubConnection();
   }
 }
