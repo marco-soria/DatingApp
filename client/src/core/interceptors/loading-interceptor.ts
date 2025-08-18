@@ -1,6 +1,7 @@
 import { HttpEvent, HttpInterceptorFn, HttpParams } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { delay, finalize, of, tap } from 'rxjs';
+import { delay, finalize, identity, of, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { BusyService } from '../services/busy-service';
 
 const cache = new Map<string, HttpEvent<unknown>>();
@@ -47,6 +48,10 @@ export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
     invalidateCache('/messages');
   }
 
+  if (req.method.includes('POST') && req.url.includes('/add-photo')) {
+    invalidateCache('/photos');
+  }
+
   if (req.method.includes('POST') && req.url.includes('/logout')) {
     cache.clear();
   }
@@ -61,7 +66,7 @@ export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
   busyService.busy();
 
   return next(req).pipe(
-    delay(500),
+    environment.production ? identity : delay(500),
     tap((response) => {
       cache.set(cacheKey, response);
     }),
