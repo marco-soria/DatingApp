@@ -1,10 +1,15 @@
 import { HttpEvent, HttpInterceptorFn, HttpParams } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { delay, finalize, identity, of, tap } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { delay, finalize, of, tap } from 'rxjs';
 import { BusyService } from '../services/busy-service';
 
-const cache = new Map<string, HttpEvent<unknown>>();
+type CacheEntry = {
+  response: HttpEvent<unknown>;
+  timestamp: number;
+};
+
+const cache = new Map<string, CacheEntry>();
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5
 
 // Función para invalidar cache selectivo por patrón de URL
 export const invalidateCache = (urlPattern?: string) => {
@@ -48,10 +53,6 @@ export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
     invalidateCache('/messages');
   }
 
-  if (req.method.includes('POST') && req.url.includes('/add-photo')) {
-    invalidateCache('/photos');
-  }
-
   if (req.method.includes('POST') && req.url.includes('/logout')) {
     cache.clear();
   }
@@ -59,16 +60,25 @@ export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
   if (req.method === 'GET') {
     const cachedResponse = cache.get(cacheKey);
     if (cachedResponse) {
-      return of(cachedResponse);
+      const isExpired =
+        Date.now() - cachedResponse.timestamp > CACHE_DURATION_MS;
+      if (!isExpired) {
+        return of(cachedResponse.response);
+      } else {
+        cache.delete(cacheKey);
+      }
     }
   }
 
   busyService.busy();
 
   return next(req).pipe(
-    environment.production ? identity : delay(500),
+    delay(500),
     tap((response) => {
-      cache.set(cacheKey, response);
+      cache.set(cacheKey, {
+        response,
+        timestamp: Date.now(),
+      });
     }),
     finalize(() => {
       busyService.idle();
